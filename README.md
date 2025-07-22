@@ -9,6 +9,7 @@ This extension allows you to boost the audio volume of any tab up to 600%. It us
 - Optional **voice boost** and **bass boost** filters
 - Fine-grained slider control from **0%** to **600%**
 - Quickly switch to any audible tab with a single click
+ - Works inside iframes and embedded players
 
 ## Development
 
