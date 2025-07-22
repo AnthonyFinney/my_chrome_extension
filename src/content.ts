@@ -7,6 +7,10 @@ interface AudioNodes {
 
 const nodesMap = new WeakMap<HTMLMediaElement, AudioNodes>();
 
+let currentVolume = 1;
+let bassEnabled = false;
+let voiceEnabled = false;
+
 function ensureNodes(el: HTMLMediaElement): AudioNodes {
   let nodes = nodesMap.get(el);
   if (!nodes) {
@@ -16,14 +20,15 @@ function ensureNodes(el: HTMLMediaElement): AudioNodes {
     const bass = ctx.createBiquadFilter();
     bass.type = "lowshelf";
     bass.frequency.value = 150;
-    bass.gain.value = 0;
+    bass.gain.value = bassEnabled ? 10 : 0;
 
     const voice = ctx.createBiquadFilter();
     voice.type = "highshelf";
     voice.frequency.value = 3000;
-    voice.gain.value = 0;
+    voice.gain.value = voiceEnabled ? 10 : 0;
 
     const gain = ctx.createGain();
+    gain.gain.value = currentVolume;
 
     source.connect(bass);
     bass.connect(voice);
@@ -37,24 +42,40 @@ function ensureNodes(el: HTMLMediaElement): AudioNodes {
   return nodes;
 }
 
+function applyToAll() {
+  document.querySelectorAll("audio,video").forEach((el) => {
+    const nodes = ensureNodes(el as HTMLMediaElement);
+    nodes.gain.gain.value = currentVolume;
+    nodes.bass.gain.value = bassEnabled ? 10 : 0;
+    nodes.voice.gain.value = voiceEnabled ? 10 : 0;
+  });
+}
+
+applyToAll();
+
+const observer = new MutationObserver((mutations) => {
+  for (const m of mutations) {
+    m.addedNodes.forEach((node) => {
+      if (node instanceof HTMLMediaElement) {
+        ensureNodes(node);
+      } else if (node instanceof HTMLElement) {
+        node.querySelectorAll("audio,video").forEach((el) => ensureNodes(el as HTMLMediaElement));
+      }
+    });
+  }
+});
+
+observer.observe(document.documentElement, { childList: true, subtree: true });
+
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.action === "set_volume") {
-    const volume = Math.max(0, Math.min(6, msg.value));
-    document.querySelectorAll("audio,video").forEach((node) => {
-      const { gain } = ensureNodes(node as HTMLMediaElement);
-      gain.gain.value = volume;
-    });
+    currentVolume = Math.max(0, Math.min(6, msg.value));
+    applyToAll();
   } else if (msg.action === "toggle_bass") {
-    const enabled = Boolean(msg.value);
-    document.querySelectorAll("audio,video").forEach((node) => {
-      const { bass } = ensureNodes(node as HTMLMediaElement);
-      bass.gain.value = enabled ? 10 : 0;
-    });
+    bassEnabled = Boolean(msg.value);
+    applyToAll();
   } else if (msg.action === "toggle_voice") {
-    const enabled = Boolean(msg.value);
-    document.querySelectorAll("audio,video").forEach((node) => {
-      const { voice } = ensureNodes(node as HTMLMediaElement);
-      voice.gain.value = enabled ? 10 : 0;
-    });
+    voiceEnabled = Boolean(msg.value);
+    applyToAll();
   }
 });

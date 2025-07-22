@@ -3,17 +3,16 @@ async function getTabsWithAudio() {
   return await chrome.tabs.query({ audible: true });
 }
 
-// Send volume change to the active tab
-function sendMessageToActiveTab(message: any) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id!, message);
-    }
-  });
+let targetTabId: number | undefined;
+
+function sendMessageToTargetTab(message: any) {
+  if (targetTabId !== undefined) {
+    chrome.tabs.sendMessage(targetTabId, message);
+  }
 }
 
-function sendVolumeToActiveTab(value: number) {
-  sendMessageToActiveTab({ action: "set_volume", value });
+function sendVolumeToTargetTab(value: number) {
+  sendMessageToTargetTab({ action: "set_volume", value });
 }
 
 function renderTabs(tabs: chrome.tabs.Tab[]) {
@@ -25,6 +24,7 @@ function renderTabs(tabs: chrome.tabs.Tab[]) {
     const li = document.createElement("li");
     li.textContent = tab.title ?? "Untitled";
     li.addEventListener("click", () => {
+      targetTabId = tab.id;
       chrome.tabs.update(tab.id!, { active: true });
     });
     list.appendChild(li);
@@ -40,22 +40,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     slider.addEventListener("input", () => {
       const vol = Number(slider.value);
       (label as HTMLElement).textContent = `${Math.round(vol * 100)}%`;
-      sendVolumeToActiveTab(vol);
+      sendVolumeToTargetTab(vol);
     });
   }
 
   if (voice) {
     voice.addEventListener("change", () => {
-      sendMessageToActiveTab({ action: "toggle_voice", value: voice.checked });
+      sendMessageToTargetTab({ action: "toggle_voice", value: voice.checked });
     });
   }
 
   if (bass) {
     bass.addEventListener("change", () => {
-      sendMessageToActiveTab({ action: "toggle_bass", value: bass.checked });
+      sendMessageToTargetTab({ action: "toggle_bass", value: bass.checked });
     });
   }
 
+  const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (activeTab) {
+    targetTabId = activeTab.id;
+  }
   const tabs = await getTabsWithAudio();
   renderTabs(tabs);
 });
