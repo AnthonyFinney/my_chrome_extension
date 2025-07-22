@@ -4,15 +4,16 @@ async function getTabsWithAudio() {
 }
 
 // Send volume change to the active tab
-function sendVolumeToActiveTab(value: number) {
+function sendMessageToActiveTab(message: any) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id!, {
-        action: "set_volume",
-        value,
-      });
+      chrome.tabs.sendMessage(tabs[0].id!, message);
     }
   });
+}
+
+function sendVolumeToActiveTab(value: number) {
+  sendMessageToActiveTab({ action: "set_volume", value });
 }
 
 function renderTabs(tabs: chrome.tabs.Tab[]) {
@@ -33,11 +34,25 @@ function renderTabs(tabs: chrome.tabs.Tab[]) {
 document.addEventListener("DOMContentLoaded", async () => {
   const slider = document.getElementById("volume-slider") as HTMLInputElement;
   const label = document.getElementById("volume-label");
+  const voice = document.getElementById("voice-boost") as HTMLInputElement;
+  const bass = document.getElementById("bass-boost") as HTMLInputElement;
   if (slider && label) {
     slider.addEventListener("input", () => {
       const vol = Number(slider.value);
       (label as HTMLElement).textContent = `${Math.round(vol * 100)}%`;
       sendVolumeToActiveTab(vol);
+    });
+  }
+
+  if (voice) {
+    voice.addEventListener("change", () => {
+      sendMessageToActiveTab({ action: "toggle_voice", value: voice.checked });
+    });
+  }
+
+  if (bass) {
+    bass.addEventListener("change", () => {
+      sendMessageToActiveTab({ action: "toggle_bass", value: bass.checked });
     });
   }
 
