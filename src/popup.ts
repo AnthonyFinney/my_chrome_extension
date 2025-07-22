@@ -5,16 +5,23 @@ async function getTabsWithAudio() {
 
 let targetTabId: number | undefined;
 
-function sendMessageToTargetTab(message: any) {
+function sendMessageToTargetTab<T = any>(message: any): Promise<T | undefined> {
   if (targetTabId !== undefined) {
-    chrome.tabs.sendMessage(targetTabId, message);
+    return chrome.tabs.sendMessage(targetTabId, message);
   }
+  return Promise.resolve(undefined);
 }
 
 function sendVolumeToTargetTab(value: number) {
   sendMessageToTargetTab({ action: "set_volume", value });
 }
 
+async function getCurrentVolume(): Promise<number> {
+  const resp = await sendMessageToTargetTab<{ value: number }>({
+    action: "get_volume",
+  });
+  return resp && typeof resp.value === "number" ? resp.value : 1;
+}
 function renderTabs(tabs: chrome.tabs.Tab[]) {
   const list = document.getElementById("tabs-list");
   if (!list) return;
@@ -42,6 +49,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       (label as HTMLElement).textContent = `${Math.round(vol * 100)}%`;
       sendVolumeToTargetTab(vol);
     });
+
+    const current = await getCurrentVolume();
+    slider.value = String(current);
+    (label as HTMLElement).textContent = `${Math.round(current * 100)}%`;
   }
 
   if (voice) {
