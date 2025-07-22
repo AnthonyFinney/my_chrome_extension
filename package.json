@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "clean": "rimraf dist",
+    "build:ts": "tsc",
+    "copy:public": "copyfiles -u 1 public/**/* dist",
+    "build": "npm run clean && npm run build:ts && npm run copy:public",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +16,8 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/chrome": "^0.1.1",
+    "copyfiles": "^2.4.1",
+    "rimraf": "^6.0.1",
     "typescript": "^5.8.3"
   }
 }
