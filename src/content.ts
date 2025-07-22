@@ -71,7 +71,7 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(document.documentElement, { childList: true, subtree: true });
 
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.action === "set_volume") {
     currentVolume = Math.max(0, Math.min(6, msg.value));
     applyToAll();
@@ -81,5 +81,8 @@ chrome.runtime.onMessage.addListener((msg) => {
   } else if (msg.action === "toggle_voice") {
     voiceEnabled = Boolean(msg.value);
     applyToAll();
+  } else if (msg.action === "get_volume") {
+    sendResponse({ value: currentVolume });
   }
+  return true;
 });
