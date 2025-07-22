@@ -44,3 +44,5 @@ next-env.d.ts
 /__tests__
 jest.config.js
 jest.setup.js
+/dist
+
