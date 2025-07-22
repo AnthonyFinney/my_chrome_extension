@@ -16,11 +16,19 @@ function sendVolumeToTargetTab(value: number) {
   sendMessageToTargetTab({ action: "set_volume", value });
 }
 
-async function getCurrentVolume(): Promise<number> {
+async function getCurrentVolume(): Promise<number | undefined> {
   const resp = await sendMessageToTargetTab<{ value: number }>({
     action: "get_volume",
   });
-  return resp && typeof resp.value === "number" ? resp.value : 1;
+  return resp && typeof resp.value === "number" ? resp.value : undefined;
+}
+
+async function getStoredVolume(): Promise<number | undefined> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get("boostVolume", (data) => {
+      resolve(typeof data.boostVolume === "number" ? data.boostVolume : undefined);
+    });
+  });
 }
 function renderTabs(tabs: chrome.tabs.Tab[]) {
   const list = document.getElementById("tabs-list");
@@ -50,7 +58,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       sendVolumeToTargetTab(vol);
     });
 
-    const current = await getCurrentVolume();
+    let current = await getCurrentVolume();
+    if (typeof current !== "number") {
+      current = await getStoredVolume();
+    }
+    if (typeof current !== "number") {
+      current = 1;
+    }
     slider.value = String(current);
     (label as HTMLElement).textContent = `${Math.round(current * 100)}%`;
   }
