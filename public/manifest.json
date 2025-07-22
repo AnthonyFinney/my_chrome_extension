@@ -1,31 +1,21 @@
 {
-    "manifest_version": 3,
-    "name": "Volume Master TS",
-    "version": "1.0",
-    "description": "Control tab audio volume.",
-    "permissions": [
-        "tabs",
-        "scripting",
-        "activeTab"
-    ],
-    "host_permissions": [
-        "<all_urls>"
-    ],
-    "background": {
-        "service_worker": "background.js"
-    },
-    "action": {
-        "default_popup": "popup.html",
-        "default_icon": "favicon.ico"
-    },
-    "content_scripts": [
-        {
-            "matches": [
-                "<all_urls>"
-            ],
-            "js": [
-                "content.js"
-            ]
-        }
-    ]
+  "manifest_version": 3,
+  "name": "Volume Booster",
+  "version": "1.0",
+  "description": "Boost tab audio volume up to 600%.",
+  "permissions": ["tabs", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "favicon.ico"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
 }
