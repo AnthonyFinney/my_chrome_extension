@@ -38,6 +38,10 @@ function ensureNodes(el: HTMLMediaElement): AudioNodes {
 
     nodes = { ctx, gain, bass, voice };
     nodesMap.set(el, nodes);
+
+    el.addEventListener("volumechange", () => {
+      nodes!.gain.gain.value = currentVolume;
+    });
   }
   return nodes;
 }
