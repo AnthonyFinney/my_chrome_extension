@@ -25,9 +25,15 @@ async function getCurrentVolume(): Promise<number | undefined> {
 
 async function getStoredVolume(): Promise<number | undefined> {
   return new Promise((resolve) => {
-    chrome.storage.local.get("boostVolume", (data) => {
-      resolve(typeof data.boostVolume === "number" ? data.boostVolume : undefined);
-    });
+    if (chrome?.storage?.local) {
+      chrome.storage.local.get("boostVolume", (data) => {
+        resolve(
+          typeof data.boostVolume === "number" ? data.boostVolume : undefined
+        );
+      });
+    } else {
+      resolve(undefined);
+    }
   });
 }
 function renderTabs(tabs: chrome.tabs.Tab[]) {

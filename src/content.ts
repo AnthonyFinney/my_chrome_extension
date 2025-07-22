@@ -55,12 +55,16 @@ function applyToAll() {
   });
 }
 
-chrome.storage.local.get("boostVolume", (data) => {
-  if (typeof data.boostVolume === "number") {
-    currentVolume = data.boostVolume;
-  }
+if (chrome?.storage?.local) {
+  chrome.storage.local.get("boostVolume", (data) => {
+    if (typeof data.boostVolume === "number") {
+      currentVolume = data.boostVolume;
+    }
+    applyToAll();
+  });
+} else {
   applyToAll();
-});
+}
 
 const observer = new MutationObserver((mutations) => {
   for (const m of mutations) {
@@ -79,7 +83,9 @@ observer.observe(document.documentElement, { childList: true, subtree: true });
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.action === "set_volume") {
     currentVolume = Math.max(0, Math.min(6, msg.value));
-    chrome.storage.local.set({ boostVolume: currentVolume });
+    if (chrome?.storage?.local) {
+      chrome.storage.local.set({ boostVolume: currentVolume });
+    }
     applyToAll();
   } else if (msg.action === "toggle_bass") {
     bassEnabled = Boolean(msg.value);
